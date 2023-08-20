@@ -5,10 +5,9 @@ import json
 import prod
 import xml.etree.ElementTree as ET
 
-import numpy as np
 from scipy.spatial.transform import Rotation
 
-export_path = "D:/GKNIFE/LightingBeast/exported/"
+export_path = "D:/GKNIFE/LightingBeast/exported/actors/"
 
 def zyx_to_yzx_rotation(zyx_rotation):
     r = Rotation.from_euler('xyz', zyx_rotation, degrees=False)
@@ -37,6 +36,12 @@ for outfilename,folder_suffix in files:
         objects = {}
 
         root = ET.parse('mubin'+folder_suffix+'/'+filename).getroot()
+
+        export_filename = export_path + os.path.basename(filename) + ".json"
+
+        # skip if file already exists
+        if os.path.exists(export_filename):
+            continue
 
         dropactor_objs = (root.findall('./*/value') +
                           root.findall('./Rails/*/RailPoints/value'))
@@ -109,33 +114,50 @@ for outfilename,folder_suffix in files:
             #if len(scale):
             #    objects[name]['locations'][-1].append({'width':scale[0],'height':scale[-1],'rotation':rotation[1]})
 
-        outfile = open(export_path + os.path.basename(filename) + ".json",'w')
+        outfile = open(export_filename,'w')
         #outfile.write('var locations = ')
-        json.dump(objects, outfile, sort_keys=True,separators=(',', ':'))
+        json.dump(objects, outfile, sort_keys=True,separators=(',', ':'),indent=4)
         #outfile.write(';\n')
         outfile.close()
 
-    # for filename in os.listdir('blwp'+folder_suffix):
+    for filename in os.listdir('blwp'+folder_suffix):
 
-    #     # output objects
-    #     objects = { "mubin": {}, "blwp": {}}
+        # output objects
+        objects = {}
 
-    #     f=open('blwp'+folder_suffix+'/'+filename,'rb')
-    #     data = f.read()
-    #     f.close()
-    #     chunk_objects = prod.parseProd(data)
-    #     for name in chunk_objects:
-    #         if name in object_names:
-    #             nice_name = object_names[name]
-    #         else:
-    #             nice_name = name
-    #         if name not in objects["blwp"]:
-    #             objects["blwp"][name] = {'display_name':nice_name, 'locations':[]}
-    #         objects["blwp"][name]['locations'] += [(round(x,2),round(z,2),round(y,2)) for x,y,z in chunk_objects[name]]
-    #         #objects["blwp"][name]['locations'] = objects["blwp"][name]['locations'] + 1
+        export_filename = export_path + os.path.basename(filename) + ".json"
 
-    #     outfile = open("./exported/" + os.path.basename(filename) + ".json",'w')
-    #     #outfile.write('var locations = ')
-    #     json.dump(objects, outfile, sort_keys=True,separators=(',', ':'),indent=4)
-    #     #outfile.write(';\n')
-    #     outfile.close()
+        # skip if file already exists
+        if os.path.exists(export_filename):
+            continue
+
+        f=open('blwp'+folder_suffix+'/'+filename,'rb')
+        data = f.read()
+        f.close()
+        
+        chunk_objects = prod.parseProd(data)
+        for name in chunk_objects:
+            if name in object_names:
+                nice_name = object_names[name]
+            else:
+                nice_name = name
+            if name not in objects:
+                objects[name] = {'actor':nice_name, 'count': len(chunk_objects[name]), 'locations':[], 'rotations':[], 'scales':[]}
+
+            
+            all_transforms = [(x,y,z,rotX, rotY, rotZ, scale) for x,y,z,rotX,rotY,rotZ,scale in chunk_objects[name]]
+
+            # iterate the all_transforms
+            for transform in all_transforms:
+                objects[name]['locations'].append( "{},{},{}".format(round(transform[0]*100,2), round(transform[2]*100,2), round(transform[1]*100),2) )
+                raw_rotation = [transform[3],transform[4],transform[5]]
+                rotation = zyx_to_yzx_rotation(raw_rotation)
+                objects[name]['rotations'].append( "{},{},{}".format(round(rotation[1] * 180 / 3.1415926535897932,2), round(rotation[2] * -180 / 3.1415926535897932,2), round(rotation[0] * 180 / 3.1415926535897932,2)) )
+                objects[name]['scales'].append( "{}".format(round(transform[6],2)) )
+            #objects["blwp"][name]['locations'] = objects["blwp"][name]['locations'] + 1
+
+        outfile = open(export_filename,'w')
+        #outfile.write('var locations = ')
+        json.dump(objects, outfile, sort_keys=True,separators=(',', ':'),indent=4)
+        #outfile.write(';\n')
+        outfile.close()

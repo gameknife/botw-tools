@@ -31,7 +31,7 @@ def parseProd(data):
         for j in range(element_count):
             x, y, z, rotX, rotY, rotZ, scale, unk = struct.unpack('>ffffffff',data[offset+0x10+j*0x20:offset+0x30+j*0x20])
             assert unk == 0
-            objects[name].append((x,y,z))
+            objects[name].append((x,y,z,rotX, rotY, rotZ, scale))
         offset += 0x10 + cluster_size
     return objects
 
