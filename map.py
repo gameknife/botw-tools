@@ -15,6 +15,13 @@ def zyx_to_yzx_rotation(zyx_rotation):
     yzx_rotation = Rotation.from_quat(q).as_euler('xzy', degrees=False)
     return yzx_rotation
 
+def zyx_to_yzx_rotation_degree(zyx_rotation):
+    r = Rotation.from_euler('xyz', zyx_rotation, degrees=True)
+    q = r.as_quat()
+    yzx_rotation = Rotation.from_quat(q).as_euler('xzy', degrees=True)
+    return yzx_rotation
+
+
 files = [
 ('map_locations.json',''),
 #('map_locations_dungeon.json','_dungeon'),
@@ -87,21 +94,6 @@ for outfilename,folder_suffix in files:
             else:
                 nice_name = name
                 
-            # if len(drop_tables):
-            #     drop_table = drop_tables[0].text
-            #     if drop_table != 'Normal':
-            #         name = name+':'+drop_table
-            #         nice_name = nice_name+':'+drop_table
-            # for drop_actor in drop_actors:
-            #     drop_actor = drop_actor.text
-            #     if drop_actor in ('Normal', 'Default', 'NormalArrow'):
-            #         continue
-            #     name += ':' + drop_actor
-            #     nice_name += ':' + object_names[drop_actor]
-            # if is_hardmode:
-            #     name = 'HARD:'+name
-            #     nice_name = 'HARD:'+nice_name
-            
             # add uuid to name
             if 'HashId' in actor.attrib:
                 name = name + '_' + actor.attrib['HashId']
@@ -151,8 +143,9 @@ for outfilename,folder_suffix in files:
             for transform in all_transforms:
                 objects[name]['locations'].append( "{},{},{}".format(round(transform[0]*100,2), round(transform[2]*100,2), round(transform[1]*100),2) )
                 raw_rotation = [transform[3],transform[4],transform[5]]
-                rotation = zyx_to_yzx_rotation(raw_rotation)
-                objects[name]['rotations'].append( "{},{},{}".format(round(rotation[1] * 180 / 3.1415926535897932,2), round(rotation[2] * -180 / 3.1415926535897932,2), round(rotation[0] * 180 / 3.1415926535897932,2)) )
+                # blwp save the degree value, not radian, found from https://github.com/handsomematt/botw-modding/blob/master/docs/file_formats/blwp.md
+                rotation = zyx_to_yzx_rotation_degree(raw_rotation)
+                objects[name]['rotations'].append( "{},{},{}".format(round(rotation[0],2), round(rotation[1],2), round(rotation[2],2)) )
                 objects[name]['scales'].append( "{}".format(round(transform[6],2)) )
             #objects["blwp"][name]['locations'] = objects["blwp"][name]['locations'] + 1
 
