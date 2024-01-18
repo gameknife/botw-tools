@@ -55,6 +55,9 @@ for outfilename,folder_suffix in files:
 
         for actor in dropactor_objs:
             name = actor.findall('./UnitConfigName')[0].text
+            Links = [node.attrib['DestUnitHashId'] for node in actor.findall('./LinksToObj/value')]
+            Parameters = []
+
             coords = [float(node.text[:-1]) for node in actor.findall('./Translate/value')]
             if len(coords) == 0:
                 continue
@@ -88,21 +91,27 @@ for outfilename,folder_suffix in files:
             is_hardmode = False
             if hard and hard[0].attrib['IsHardModeActor'] == 'true':
                 is_hardmode = True
-            
-            if name in object_names:
-                nice_name = object_names[name]
-            else:
-                nice_name = name
+
+            # do not hide things
+                  
+            # if name in object_names:
+            #     nice_name = object_names[name]
+            # else:
+            #     nice_name = name
                 
+            nice_name = name
+
             # add uuid to name
             if 'HashId' in actor.attrib:
-                name = name + '_' + actor.attrib['HashId']
+                name = actor.attrib['HashId']
 
             objects[name] = {'actor':nice_name, 'location':"", 'rotation':"", 'scale':""}
             #object][name]['locations'] = objects["mubin"][name]['locations'] + 1
             objects[name]['location'] = "{},{},{}".format(round(coords[0] * 100,2), round(coords[-1] * 100,2), round(coords[1] * 100,2))
             objects[name]['rotation'] = "{},{},{}".format(round(rotation[1] * 180 / 3.1415926535897932,2), round(rotation[2] * -180 / 3.1415926535897932,2), round(rotation[0] * 180 / 3.1415926535897932,2))
             objects[name]['scale'] = "{},{},{}".format(round(scale[0],2), round(scale[-1],2), round(scale[1],2))
+            objects[name]['links'] = Links
+            objects[name]['param'] = Parameters
             #if len(scale):
             #    objects[name]['locations'][-1].append({'width':scale[0],'height':scale[-1],'rotation':rotation[1]})
 
@@ -129,10 +138,13 @@ for outfilename,folder_suffix in files:
         
         chunk_objects = prod.parseProd(data)
         for name in chunk_objects:
-            if name in object_names:
-                nice_name = object_names[name]
-            else:
-                nice_name = name
+            # if name in object_names:
+            #     nice_name = object_names[name]
+            # else:
+            #     nice_name = name
+
+            nice_name = name
+
             if name not in objects:
                 objects[name] = {'actor':nice_name, 'count': len(chunk_objects[name]), 'locations':[], 'rotations':[], 'scales':[]}
 
