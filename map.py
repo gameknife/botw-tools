@@ -157,7 +157,7 @@ for outfilename,folder_suffix in files:
                 raw_rotation = [transform[3],transform[4],transform[5]]
                 # blwp save the degree value, not radian, found from https://github.com/handsomematt/botw-modding/blob/master/docs/file_formats/blwp.md
                 rotation = zyx_to_yzx_rotation_degree(raw_rotation)
-                objects[name]['rotations'].append( "{},{},{}".format(round(rotation[0],2), round(rotation[1],2), round(rotation[2],2)) )
+                objects[name]['rotations'].append( "{},{},{}".format(round(rotation[0],2), round(rotation[1],2), round(-rotation[2],2)) )
                 objects[name]['scales'].append( "{}".format(round(transform[6],2)) )
             #objects["blwp"][name]['locations'] = objects["blwp"][name]['locations'] + 1
 
